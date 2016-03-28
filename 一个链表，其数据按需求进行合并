@@ -1,0 +1,222 @@
+#include<iostream>
+using namespace std;
+
+class List
+{
+public:
+	void insert(int, int);//把两个int数表示的范围插入链表
+	void display();//用于显示链表的全部节点
+private:
+	struct Node//定义链表的节点类型
+	{
+		Node *pForward = NULL;
+		Node *pNext = NULL;
+		int pos1 = 0;
+		int pos2 = 0;
+	};
+	Node *head = NULL;//point to the first Node in List
+	Node* location(int, bool&);//此函数用于定位一个数在链表中的位置，bool用于返回这个数是在节点内还是外，
+					//函数返回结果为这个数所在的节点的地址（当其位于节点范围内时），或这个数的前一个节点的位置（当其位于节点外时）
+	Node* NewNode(int, int);//此函数用两个int数新建一个节点，并返回此节点的地址
+};
+List::Node* List::NewNode(int first, int second)//新建节点成员函数的定义
+{
+	Node* p = new Node;
+	p->pos1 = first;
+	p->pos2 = second;
+	return p;
+}
+List::Node* List::location(int num, bool& b)//定位成员函数的定义
+{
+	if (!head)
+		return NULL;//如果链表为空，则返回NULL
+	Node* p = head;
+	Node* pPre = NULL;//用于指向p的前一个节点
+	while (p)//用于寻找一个节点，此节点的pos1大于需要定位的那个int数num;min once will occur 
+	{
+		if (p->pos1 > num)
+			break;
+		pPre = p;
+		p = p->pNext;
+	}
+	if (!p)//直到链表末尾都没有找到满足pos1>num条件的节点
+	{
+		if (num <= pPre->pos2)
+		{
+			b = 1;
+			return pPre;
+		}
+		b = 0;
+		return pPre;
+	}
+	if (p->pos1>num)//找到满足pos1>num条件的节点
+	{
+		if (!pPre)
+		{
+			b = 0;
+			return pPre;
+		}
+		if (num > pPre->pos2)
+		{
+			b = 0;
+			return pPre;
+		}
+		b = 1;
+		return pPre;
+	}
+}
+void List::display()//显示成员函数的定义
+{
+	if (head == NULL)
+		return;
+	Node *p = head;
+	while (p)
+	{
+		cout << p->pos1 << "-" << p->pos2 << ends;
+		p = p->pNext;
+	}
+
+}
+void List::insert(int first, int second)//插入成员函数的定义
+{
+	if (head == NULL)//当表中无节点时，用first和second新建一个节点并返回其地址。when there is not Node in the List
+	{
+		head = NewNode(first, second);
+		return;
+	}
+	bool flagF, flagS, flag;//flagF用于标识first时候在节点范围的内部，1为是，0为否，flagS用于标识Second。flag用于标识first和second间时候有节点存在
+	Node* siteF;//first的位置
+	Node* siteS;//second的位置
+	siteF = location(first, flagF);//进行定位
+	siteS = location(second, flagS);
+	if (flagF&&flagS)//first和second都存在于表中节点中的情况.when first and second are all site in a area that exist in the list
+	{
+		if (siteS == siteF)
+			return;
+		Node *p = siteF->pNext;
+		while (p->pos2 < second)//delete nodes between first node and second node;
+		{
+			p = p->pNext;
+			delete p->pForward;
+			siteF->pNext = p;
+			p->pForward = siteF;
+		}
+		siteF->pos2 = siteS->pos2;
+		siteF->pNext = siteS->pNext;
+		siteF->pNext->pForward = siteF;
+		delete p;
+		return;
+	}
+	if (flagF&&!flagS)//first存在于而second不存在于表中节点的情况。when first is in a area exist in List and second is not
+	{
+		if (siteF == siteS)
+		{
+			siteF->pos2 = second;
+			return;
+		}
+		Node *p = siteF->pNext;
+		while (p != siteS)
+		{
+			p = p->pNext;
+			delete p->pForward;
+		}
+		siteF->pNext = siteS->pNext;
+		siteF->pNext->pForward = siteF;
+		siteF->pos2 = second;
+		delete p;
+		return;
+	}
+	if (!flagF&&flagS)//second存在于而first不存在与表中节点的情况
+	{
+		if (siteF == NULL)//first位于第一个节点之前的情况
+		{
+			head->pos1 = first, siteF = head;
+			if (siteS == siteF)
+				return;
+			Node *p = siteF->pNext;
+			while (p->pos2 < second)//delete node between first node and second node;
+			{
+				p = p->pNext;
+				delete siteF->pNext;
+				siteF->pNext = p;
+				p->pForward = siteF;
+			}
+			siteF->pos2 = siteS->pos2;
+			siteF->pNext = siteS->pNext;
+			siteS->pNext->pForward = siteF;
+			delete p;
+			return;
+		}
+		Node* p = siteF->pNext;
+		while (p != siteS)
+		{
+			p = p->pNext;
+			delete p->pForward;
+		}
+		siteF->pNext = siteS;
+		siteS->pForward = siteF;
+		siteS->pos1 = first;
+		return;
+
+	}
+	flag = siteS - siteF;//在first和second都不存在与表中节点的这个最后情况，siteS和siteF如果相同，则first和second间无节点，flag==FALSE，否则有节点,flag==TURE。
+	if (!flagF&&!flagS)//first和second都不存在与表中节点的情况
+	{
+		if (flag == 0)//first与second之间无节点的情况
+		{
+			if (siteF == NULL)//first位于第一个节点之前的情况
+			{
+				Node*p = NewNode(first, second);
+				p->pNext = head;
+				p->pForward = NULL;
+				head->pForward = p;
+				head = p;
+				return;
+			}
+			Node* p = NewNode(first, second);
+			p->pNext = siteS->pNext;
+			p->pForward = siteS;
+			siteS->pNext = p;
+			if (p->pNext)
+				p->pNext->pForward = p;
+			return;
+		}
+		if (siteF == NULL)
+		{
+			head->pos1 = first;
+			siteF = head;
+			if (siteF == siteS)
+			{
+				siteF->pos2 = second;
+				return;
+			}
+			Node *p = siteF->pNext;
+			while (p != siteS)
+			{
+				p = p->pNext;
+				delete p->pForward;
+			}
+			siteF->pNext = siteS->pNext;
+			if (siteF->pNext)
+				siteF->pNext->pForward = siteF;
+			siteF->pos2 = second;
+			delete p;
+			return;
+		}
+
+		Node* p = siteF->pNext;
+		while (p != siteS)
+		{
+			p = p->pNext;
+			delete p->pForward;
+		}
+		siteF->pNext = p;
+		p->pForward = siteF;
+		p->pos1 = first;
+		p->pos2 = second;
+		return;
+
+	}
+
+
+}
