@@ -1,0 +1,14 @@
+void SortNum(int *NumList,int NumCount)
+{
+	int count = 0;
+	int temp;
+	while (count < NumCount)//外围循环用于依次在数组里放置最小值
+	{
+		for (int i = count + 1; i < NumCount; i++)//内层循环用于在外围循环的位置及其之后位置之间寻找最小值，并交换他们的位置
+		{
+			if (NumList[i] < NumList[count])
+				temp = NumList[i], NumList[i] = NumList[count], NumList[count] = temp;//交换值
+		}
+		count++;
+	}
+}
